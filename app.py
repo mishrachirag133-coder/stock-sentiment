@@ -1,11 +1,6 @@
 import streamlit as st
 from news import get_news
 from sentiment import load_model,get_sentiment
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
-
 # Page setup
 st.set_page_config(
     page_title="Stock Sentiment Analyzer",
@@ -17,7 +12,7 @@ st.title("📈 Stock Sentiment Analyzer")
 st.write("Stock ki news ka sentiment analyze karo!")
 
 # API Key
-api_key = os.getenv("api_key")
+api_key = st.secrets["NEWS_API_KEY"]
 
 
 @st.cache_resource
