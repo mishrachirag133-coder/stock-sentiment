@@ -5,4 +5,3 @@ transformers
 torch
 yfinance
 plotly
-paython-dotenv
