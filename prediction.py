@@ -1,13 +1,11 @@
 import yfinance as yf
 import numpy as np
-import pandas as pd
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import MinMaxScaler
-from tf_keras.models import Sequential
-from tf_keras.layers import LSTM, Dense
+
 def get_stock_data(stock_name, interval="1h"):
     ticker = stock_name.upper() + ".NS"
     
-    # Interval ke hisaab se period set karo
     if interval == "1h":
         period = "60d"
     else:
@@ -20,67 +18,44 @@ def get_stock_data(stock_name, interval="1h"):
     
     return df
 
-def prepare_data(df, interval="1h"):
-    data = df["Close"].values.reshape(-1, 1)
-    
-    if data.ndim > 2:
-        data = data.squeeze()
+def prepare_data(df, lookback=24):
+    close = df["Close"].values.flatten()
     
     scaler = MinMaxScaler()
-    scaled = scaler.fit_transform(data)
-    
-    # Interval ke hisaab se lookback set karo
-    if interval == "1h":
-        lookback = 24  # 24 ghante
-    else:
-        lookback = 60  # 60 din
+    scaled = scaler.fit_transform(close.reshape(-1, 1)).flatten()
     
     X, y = [], []
     for i in range(lookback, len(scaled)):
-        X.append(scaled[i-lookback:i, 0])
-        y.append(scaled[i, 0])
+        X.append(scaled[i-lookback:i])
+        y.append(scaled[i])
     
-    X = np.array(X)
-    y = np.array(y)
-    X = X.reshape(X.shape[0], X.shape[1], 1)
-    
-    return X, y, scaler, lookback
-
-def build_model(lookback):
-    model = Sequential()
-    model.add(LSTM(50, return_sequences=True, input_shape=(lookback, 1)))
-    model.add(LSTM(50))
-    model.add(Dense(1))
-    model.compile(optimizer="adam", loss="mse")
-    return model
+    return np.array(X), np.array(y), scaler
 
 def predict_price(stock_name, steps=2, interval="1h"):
     try:
         df = get_stock_data(stock_name, interval)
         
         if df.empty:
-            print("Data empty!")
             return None, None, None
         
-        X, y, scaler, lookback = prepare_data(df, interval)
+        lookback = 24 if interval == "1h" else 60
+        X, y, scaler = prepare_data(df, lookback)
         
-        model = build_model(lookback)
-        model.fit(X, y, epochs=5, batch_size=32, verbose=0)
+        # Random Forest Model
+        model = RandomForestRegressor(n_estimators=100)
+        model.fit(X, y)
         
-        close_data = df["Close"].values.reshape(-1, 1)
-        if close_data.shape[1] > 1:
-            close_data = close_data[:, 0].reshape(-1, 1)
-        
-        scaled_data = scaler.transform(close_data)
-        last_sequence = scaled_data[-lookback:].flatten().tolist()
+        # Future predict karo
+        close = df["Close"].values.flatten()
+        scaled = scaler.transform(close.reshape(-1, 1)).flatten()
+        last_sequence = list(scaled[-lookback:])
         
         predictions = []
         for _ in range(steps):
-            input_data = np.array(last_sequence[-lookback:]).reshape(1, lookback, 1)
-            pred = model.predict(input_data, verbose=0)
-            pred_value = float(pred.flatten()[0])
-            predictions.append(pred_value)
-            last_sequence.append(pred_value)
+            input_data = np.array(last_sequence[-lookback:]).reshape(1, -1)
+            pred = float(model.predict(input_data)[0])
+            predictions.append(pred)
+            last_sequence.append(pred)
         
         predictions_original = scaler.inverse_transform(
             np.array(predictions).reshape(-1, 1)
