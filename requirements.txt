@@ -7,4 +7,4 @@ yfinance
 plotly
 scikit-learn
 numpy
-tensorflow
+tf-keras
