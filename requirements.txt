@@ -5,3 +5,6 @@ transformers
 torch
 yfinance
 plotly
+scikit-learn
+numpy
+tensorflow
