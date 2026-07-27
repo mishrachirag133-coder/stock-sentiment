@@ -7,4 +7,3 @@ yfinance
 plotly
 scikit-learn
 numpy
-tf-keras
