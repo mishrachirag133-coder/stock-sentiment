@@ -6,12 +6,12 @@ import plotly.graph_objects as go
 
 # Page setup
 st.set_page_config(
-    page_title="Stock Sentiment Analyzer",
+    page_title=" Stock Sentiment & Price Predictor",
     page_icon="📈",
     layout="wide"
 )
 
-st.title("📈 Stock Sentiment Analyzer")
+st.title("📈 Stock Sentiment & Price Predictor")
 st.write("Real-time stock sentiment analysis and price prediction powered by AI.")
 
 # API Key
