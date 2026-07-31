@@ -8,8 +8,7 @@ def get_news(stock_name, api_key):
     response = requests.get(url)
     data = response.json()
     
-    print(data)  # Terminal mein dekho kya aa raha hai
-    
+    print(data)  
     if data.get("status") != "ok":
         print(f"Error: {data.get('message')}")
         return []
